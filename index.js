@@ -19,7 +19,7 @@ class AudioSample {
         const source = audioCtx.createBufferSource();
         source.buffer = this.buffer;
         source.connect(audioCtx.destination);
-        source.start();
+        source.start(0);
     }
 }
 
@@ -35,23 +35,23 @@ function toArrayBuffer(buffer) {
 }
 const audioDirectory = "P:\\House party\\Sound board\\HP Sound Board\\SoundBoard";
 const files = fs.readdirSync(audioDirectory);
-console.log(files)
 for (const file of files) {
     if (fs.lstatSync(path.join(audioDirectory, file)).isDirectory()) continue;
     let fileData = fs.readFileSync(path.join(audioDirectory, file), (err, data) => {
         // if (err) throw err;
         // sampleBuffer = data;
     });
+    const sampleName = file.substring(0, file.lastIndexOf("."));
     audioCtx.decodeAudioData(toArrayBuffer(fileData), (buffer) => {
-        audioSamples.push(new AudioSample(file, buffer));
+        audioSamples.push(new AudioSample(sampleName, buffer));
     });
 }
 
-const keyboard = [['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '{', '}'],
-['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '@'],
-['z', 'x', 'c', 'v', 'b', 'n', 'm', '<', '>', '?']];
+const keyboard = [['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
+['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
+['z', 'x', 'c', 'v', 'b', 'n', 'm']];
 
-const keyboardToSampleMap = {};
+const keyboardToSampleMap = [{}, {}, {}];
 
 function render() {
     let ctx = canvas.getContext("2d");
@@ -70,11 +70,11 @@ function render() {
             const line = keyboard[lineIndex];
             const lineOffset = (window.innerWidth - (line.length * buttonSize + (line.length - 1) * margin)) / 2;
             for (const keyIndex in line) {
-                if (!files[++i]) break;
-                if (pageIndex == 0) {
-                    keyboardToSampleMap[line[keyIndex]] = audioSamples[i - 1];
-                }
-                const fileName = files[i].substring(0, files[i].lastIndexOf("."));
+                let as = audioSamples[i++];
+                if (!as) continue;
+                keyboardToSampleMap[pageIndex][line[keyIndex]] = as;
+
+                const fileName = as.name;
                 const wrappedFileName = fileName.replace(/(.{13})/g, "$1\n");
                 const key = line[keyIndex];
                 const buttonStartX = lineOffset + keyIndex * (buttonSize + margin);
@@ -87,7 +87,7 @@ function render() {
                 ctx.fillStyle = "#fcd140";
                 ctx.font = "30px Arial";
                 const textWidth = ctx.measureText(key).width;
-                ctx.fillText(key, buttonStartX + buttonSize * 0.5 - textWidth * 0.5, buttonStartY + buttonSize - 10);
+                ctx.fillText(key.toLocaleUpperCase(), buttonStartX + buttonSize * 0.5 - textWidth * 0.5, buttonStartY + buttonSize - 10);
                 ctx.font = "25px Arial";
                 for (let j = 0; j < wrappedFileName.split("\n").length; j++) {
                     const line = wrappedFileName.split("\n")[j];
@@ -130,7 +130,7 @@ window.addEventListener("keydown", (e) => {
         if (selectedPage > 2) selectedPage = 2;
     }
     else {
-        keyboardToSampleMap[e.key.toLocaleLowerCase()]?.play();
+        keyboardToSampleMap[selectedPage][e.key.toLocaleLowerCase()]?.play();
 
     }
 });
