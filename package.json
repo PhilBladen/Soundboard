@@ -1,0 +1,16 @@
+{
+  "name": "hpsoundboardv2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Phil Bladen",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^26.0.0",
+    "electron-reloader": "^1.2.3"
+  }
+}
