@@ -11,10 +11,12 @@ try {
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: false,
-    }
+    },
+    icon: "./icon.png",
     })
   
     // win.setMenu(null)
+    win.maximize();
     win.loadFile('index.html')
     // win.show()
   }

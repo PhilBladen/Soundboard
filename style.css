@@ -3,8 +3,14 @@ html, body {
     padding: 0;
     overflow: hidden;
     height: 100vh;
+    user-select: none;
 }
 
 /* .title {
     position: absolute; font-size: xx-large;
 } */
+
+@font-face {
+    font-family: 'HP';
+    src: url('./ADLaMDisplay-Regular.ttf');
+}

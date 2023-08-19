@@ -24,6 +24,7 @@ class AudioSample {
 }
 
 let audioSamples = [];
+const keyboardToSampleMap = [{}, {}, {}];
 
 function toArrayBuffer(buffer) {
     const ab = new ArrayBuffer(buffer.length);
@@ -51,73 +52,125 @@ const keyboard = [['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
 ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
 ['z', 'x', 'c', 'v', 'b', 'n', 'm']];
 
-const keyboardToSampleMap = [{}, {}, {}];
+const mainColor = "#fcd140";
+const secondaryColor = "#2b2618";
 
-function render() {
-    let ctx = canvas.getContext("2d");
-    ctx.resetTransform();
-    ctx.fillStyle = "#fcd140";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+document.body.style.backgroundColor = mainColor;
 
-    renderPageOffsetX += (selectedPage * window.innerWidth - renderPageOffsetX) * 0.08;
-
-    const margin = 10;
-    const buttonSize = ((window.innerWidth - margin) / keyboard[0].length) - margin;
-    ctx.translate(-renderPageOffsetX, 0);
-    let i = 0;
-    for (let pageIndex = 0; pageIndex < 3; pageIndex++) {
-        for (const lineIndex in keyboard) {
-            const line = keyboard[lineIndex];
-            const lineOffset = (window.innerWidth - (line.length * buttonSize + (line.length - 1) * margin)) / 2;
-            for (const keyIndex in line) {
-                let as = audioSamples[i++];
-                if (!as) continue;
-                keyboardToSampleMap[pageIndex][line[keyIndex]] = as;
-
-                const fileName = as.name;
-                const wrappedFileName = fileName.replace(/(.{13})/g, "$1\n");
-                const key = line[keyIndex];
-                const buttonStartX = lineOffset + keyIndex * (buttonSize + margin);
-                const buttonStartY = lineIndex * (buttonSize + margin) + 230;
-                ctx.fillStyle = keysDown[key] ? "#aa9e6b" : "#2b2618";
-                ctx.beginPath();
-                ctx.roundRect(buttonStartX, buttonStartY, buttonSize, buttonSize, 10);
-                ctx.fill();
-
-                ctx.fillStyle = "#fcd140";
-                ctx.font = "30px Arial";
-                const textWidth = ctx.measureText(key).width;
-                ctx.fillText(key.toLocaleUpperCase(), buttonStartX + buttonSize * 0.5 - textWidth * 0.5, buttonStartY + buttonSize - 10);
-                ctx.font = "25px Arial";
-                for (let j = 0; j < wrappedFileName.split("\n").length; j++) {
-                    const line = wrappedFileName.split("\n")[j];
-                    ctx.fillText(line, buttonStartX + margin, buttonStartY + 25 + j * 25);
-                }
-            }
+const margin = 10;
+const buttonSize = ((window.innerWidth - margin) / keyboard[0].length) - margin;
+let i = 0;
+const app = document.createElement("div");
+app.style = "display: flex; flex-direction: row; justify-content: center; align-items: center; width:100%; height:100%;";
+for (let pageIndex = 0; pageIndex < 3; pageIndex++) {
+    const page = document.createElement("div");
+    page.style = "display: flex; flex-direction: column; justify-content: center; align-items: center; width:100%; height:100%;";
+    for (const lineIndex in keyboard) {
+        const row = document.createElement("div");
+        row.style = "display: flex; flex-direction: row; justify-content: center; align-items: center;";
+        const line = keyboard[lineIndex];
+        for (const keyIndex in line) {
+            let as = audioSamples[++i];
+            if (!as) continue;
+            keyboardToSampleMap[pageIndex][line[keyIndex]] = as;
+            const key = line[keyIndex];
+            const button = document.createElement("button");
+            button.style = "display: flex; flex-direction: column; justify-content: end; align-items: center;"
+            button.style.backgroundColor = secondaryColor;
+            button.style.color = mainColor;
+            button.style.border = "none";
+            button.style.borderRadius = "10px";
+            button.style.minWidth = `${buttonSize}px`;
+            // button.style.flexGrow = 1;
+            button.style.minHeight = `${buttonSize}px`;
+            button.style.margin = "5px";
+            button.style.fontFamily = "HP";
+            button.style.fontSize = "30px";
+            button.style.cursor = "pointer";
+            button.style.padding = 0;
+            button.innerText = as.name;
+            const labelDiv = document.createElement("div");
+            labelDiv.style = "display: flex; flex-direction: column; justify-content: center; align-items: center; margin-bottom: 10px;";
+            labelDiv.innerText = key.toLocaleUpperCase();
+            button.appendChild(labelDiv);
+            button.addEventListener("click", () => {
+                keyboardToSampleMap[selectedPage][key]?.play();
+            });
+            // document.body.appendChild(button);
+            row.appendChild(button);
         }
-        ctx.translate(window.innerWidth, 0);
+        page.appendChild(row);
     }
-    ctx.resetTransform();
-
-    // Draw three small dots below the rectangles:
-    ctx.translate(canvas.width * 0.5, canvas.height - 50);
-    for (let i = -1; i <= 1; i++) {
-        ctx.fillStyle = "#2b2618";
-        ctx.beginPath();
-        ctx.arc(i * 50, 0, 13, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.fillStyle = selectedPage == (i + 1) ? "#2b2618" : "#fcd140";
-        ctx.beginPath();
-        ctx.arc(i * 50, 0, 10, 0, 2 * Math.PI);
-        ctx.fill();
-    }
+    app.appendChild(page);
 }
+document.body.appendChild(app);
 
-const animFrame = () => window.requestAnimationFrame(() => {
-    render();
-    animFrame();
-});
-animFrame();
+// function render() {
+//     let ctx = canvas.getContext("2d");
+//     ctx.resetTransform();
+//     ctx.fillStyle = "#fcd140";
+//     ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+//     renderPageOffsetX += (selectedPage * window.innerWidth - renderPageOffsetX) * 0.08;
+
+//     const margin = 10;
+//     const buttonSize = ((window.innerWidth - margin) / keyboard[0].length) - margin;
+//     ctx.translate(-renderPageOffsetX, 0);
+//     let i = 0;
+//     for (let pageIndex = 0; pageIndex < 3; pageIndex++) {
+//         for (const lineIndex in keyboard) {
+//             const line = keyboard[lineIndex];
+//             const lineOffset = (window.innerWidth - (line.length * buttonSize + (line.length - 1) * margin)) / 2;
+//             for (const keyIndex in line) {
+//                 let as = audioSamples[i++];
+//                 if (!as) continue;
+//                 keyboardToSampleMap[pageIndex][line[keyIndex]] = as;
+
+//                 const fileName = as.name;
+//                 const wrappedFileName = fileName.replace(/(.{13})/g, "$1\n");
+//                 const key = line[keyIndex];
+//                 const buttonStartX = lineOffset + keyIndex * (buttonSize + margin);
+//                 const buttonStartY = lineIndex * (buttonSize + margin) + 230;
+//                 ctx.fillStyle = keysDown[key] ? "#aa9e6b" : "#2b2618";
+//                 ctx.beginPath();
+//                 ctx.roundRect(buttonStartX, buttonStartY, buttonSize, buttonSize, 10);
+//                 ctx.fill();
+
+//                 ctx.fillStyle = "#fcd140";
+//                 ctx.font = "30px HP";
+//                 const textWidth = ctx.measureText(key).width;
+//                 ctx.fillText(key.toLocaleUpperCase(), buttonStartX + buttonSize * 0.5 - textWidth * 0.5, buttonStartY + buttonSize - 10);
+//                 ctx.font = "25px HP";
+//                 for (let j = 0; j < wrappedFileName.split("\n").length; j++) {
+//                     const line = wrappedFileName.split("\n")[j];
+//                     ctx.fillText(line, buttonStartX + margin, buttonStartY + 25 + j * 25);
+//                 }
+//             }
+//         }
+//         ctx.translate(window.innerWidth, 0);
+//     }
+//     ctx.resetTransform();
+
+//     // Draw three small dots below the rectangles:
+//     ctx.translate(canvas.width * 0.5, canvas.height - 50);
+//     for (let i = -1; i <= 1; i++) {
+//         ctx.fillStyle = "#2b2618";
+//         ctx.beginPath();
+//         ctx.arc(i * 50, 0, 13, 0, 2 * Math.PI);
+//         ctx.fill();
+//         ctx.fillStyle = selectedPage == (i + 1) ? "#2b2618" : "#fcd140";
+//         ctx.beginPath();
+//         ctx.arc(i * 50, 0, 10, 0, 2 * Math.PI);
+//         ctx.fill();
+//     }
+// }
+
+// const animFrame = () => window.requestAnimationFrame(() => {
+//     render();
+//     animFrame();
+// });
+// animFrame();
+// render();
 
 window.addEventListener("keydown", (e) => {
     keysDown[e.key.toLocaleLowerCase()] = true;
@@ -138,14 +191,14 @@ window.addEventListener("keyup", (e) => {
     keysDown[e.key.toLocaleLowerCase()] = false;
 });
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+// canvas.width = window.innerWidth;
+// canvas.height = window.innerHeight;
 
-window.addEventListener("resize", () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    render();
-});
+// window.addEventListener("resize", () => {
+//     canvas.width = window.innerWidth;
+//     canvas.height = window.innerHeight;
+//     render();
+// });
 
 document.addEventListener('drop', (e) => {
     e.preventDefault();
