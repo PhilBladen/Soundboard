@@ -20,6 +20,8 @@ class AudioSample {
     constructor(name, buffer) {
         this.name = name;
         this.buffer = buffer;
+        this.playingSamples = [];
+        this.signal = new AbortController();
     }
 
     play(endedCallback) {
@@ -27,8 +29,22 @@ class AudioSample {
         source.buffer = this.buffer;
         source.connect(audioCtx.destination);
         source.start(0);
-        if (endedCallback)
-            source.addEventListener("ended", endedCallback);
+        source.addEventListener("ended", () => {
+            this.playingSamples.splice(this.playingSamples.indexOf(source), 1);
+            if (endedCallback)
+                endedCallback();
+        }, { signal: this.signal.signal });
+        this.playingSamples.push(source);
+    }
+
+    stopAll() {
+        this.signal.abort();
+        this.signal = new AbortController();
+        for (const source of this.playingSamples) {
+            // source.onended = null;
+            source.stop();
+        }
+        this.playingSamples = [];
     }
 }
 
@@ -103,6 +119,7 @@ class AudioSlot {
 
     onSamplePlayEnd() {
         this.numPlaying--;
+        console.log("end: " + this.numPlaying)
         if (this.numPlaying == 0) {
             this.div.style.backgroundColor = mainColor;
             this.div.style.color = secondaryColor;
@@ -111,9 +128,16 @@ class AudioSlot {
 
     play() {
         this.sample.play(() => this.onSamplePlayEnd());
+        console.log("play")
         this.div.style.backgroundColor = secondaryColor;
         this.div.style.color = mainColor;
         this.numPlaying++;
+    }
+
+    stopAll() {
+        this.sample.stopAll();
+        this.numPlaying = 1;
+        this.onSamplePlayEnd();
     }
 
     loadFile(absoluteFilePath) {
@@ -171,14 +195,7 @@ for (let pageIndex = 0; pageIndex < numPages; pageIndex++) {
         const line = keyboard[lineIndex];
         for (const keyIndex in line) {
             const key = line[keyIndex];
-            // if (validAudioFiles[i])/
             new AudioSlot(key, row, pageIndex).loadFile(validAudioFiles[i++]);
-
-            // button.addEventListener("click", () => {
-            // keyboardToSampleMap[selectedPage][key]?.play();
-            // });
-            // document.body.appendChild(button);
-            // row.appendChild(button);
         }
         page.appendChild(row);
     }
@@ -211,7 +228,17 @@ window.addEventListener("keydown", (e) => {
         if (selectedPage > (numPages - 1)) selectedPage = numPages - 1;
     }
     else {
-        keyboardToSampleMap[selectedPage][e.key.toLocaleLowerCase()]?.play();
+        const slot = keyboardToSampleMap[selectedPage][e.key.toLocaleLowerCase()];
+        if (slot) {
+            if (e.ctrlKey) {
+                slot.stopAll();
+            } else if (e.shiftKey) {
+                slot.stopAll();
+                slot.play();
+            } else {
+                slot.play();
+            }
+        }
 
     }
 
