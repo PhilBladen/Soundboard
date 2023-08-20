@@ -168,11 +168,13 @@ function toArrayBuffer(buffer) {
     return ab;
 }
 const audioDirectory = "sounds";
-const files = fs.readdirSync(audioDirectory);
 const validAudioFiles = [];
-for (const file of files) {
-    if (fs.lstatSync(path.join(audioDirectory, file)).isDirectory()) continue;
-    validAudioFiles.push(path.join(audioDirectory, file));
+if (fs.existsSync(audioDirectory)) {
+    const files = fs.readdirSync(audioDirectory);
+    for (const file of files) {
+        if (fs.lstatSync(path.join(audioDirectory, file)).isDirectory()) continue;
+        validAudioFiles.push(path.join(audioDirectory, file));
+    }
 }
 
 
