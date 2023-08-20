@@ -2,37 +2,36 @@ const { app, BrowserWindow } = require('electron')
 const path = require('path')
 try {
     require('electron-reloader')(module)
-  } catch (_) {}
+} catch (_) { }
 
-  const createWindow = () => {
+const createWindow = () => {
     const win = new BrowserWindow({
-      width: 800,
-      height: 600,
-      webPreferences: {
-        nodeIntegration: true,
-        contextIsolation: false,
-    },
-    icon: "./icon.png",
+        width: 800,
+        height: 600,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false,
+        },
+        icon: "./icon.png",
     })
-  
-    // win.setMenu(null)
+
+    win.setMenu(null)
     win.maximize();
     win.loadFile('index.html')
-    // win.show()
-  }
-  
-  app.whenReady().then(() => {
+}
+
+app.whenReady().then(() => {
     createWindow()
-  
+
     app.on('activate', () => {
-      if (BrowserWindow.getAllWindows().length === 0) {
-        createWindow()
-      }
+        if (BrowserWindow.getAllWindows().length === 0) {
+            createWindow()
+        }
     })
-  })
-  
-  app.on('window-all-closed', () => {
+})
+
+app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
-      app.quit()
+        app.quit()
     }
-  })
+})

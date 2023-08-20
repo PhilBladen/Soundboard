@@ -167,7 +167,7 @@ function toArrayBuffer(buffer) {
     }
     return ab;
 }
-const audioDirectory = "P:\\House party\\Sound board\\HP Sound Board\\SoundBoard";
+const audioDirectory = "sounds";
 const files = fs.readdirSync(audioDirectory);
 const validAudioFiles = [];
 for (const file of files) {

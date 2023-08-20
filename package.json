@@ -5,6 +5,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "deploy": "electron-builder --win --x64",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Phil Bladen",
@@ -12,5 +13,51 @@
   "devDependencies": {
     "electron": "^26.0.0",
     "electron-reloader": "^1.2.3"
+  },
+  "build": {
+    "productName": "HP Sound Board 2K23",
+    "appId": "uk.co.philbladen.hpsoundboardv2",
+    "files": [
+      "**/*",
+      "node_modules",
+      "package.json"
+    ],
+    "mac": {
+      "target": {
+        "target": "zip",
+        "arch": [
+          "arm64",
+          "x64"
+        ]
+      }
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "extraResources": [
+      {
+        "from": "sounds",
+        "to": "../sounds",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ]
   }
 }
