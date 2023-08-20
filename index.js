@@ -119,7 +119,6 @@ class AudioSlot {
 
     onSamplePlayEnd() {
         this.numPlaying--;
-        console.log("end: " + this.numPlaying)
         if (this.numPlaying == 0) {
             this.div.style.backgroundColor = mainColor;
             this.div.style.color = secondaryColor;
@@ -128,7 +127,6 @@ class AudioSlot {
 
     play() {
         this.sample.play(() => this.onSamplePlayEnd());
-        console.log("play")
         this.div.style.backgroundColor = secondaryColor;
         this.div.style.color = mainColor;
         this.numPlaying++;
@@ -211,6 +209,14 @@ for (let pageIndicatorIndex = 0; pageIndicatorIndex < numPages; pageIndicatorInd
     pageIndicator.style.transition = "background-color 0.15s ease-in-out ";
     document.getElementById("pageIndicators").appendChild(pageIndicator);
 }
+
+const latencyInfo = document.createElement("div");
+latencyInfo.style = "position: absolute; bottom: 0px; right: 0px; padding: 10px; font-family: HP; font-size: 1.2vw; color: #2b2618;";
+latencyInfo.innerText = "Latency: 0ms";
+document.getElementById("pageIndicators").appendChild(latencyInfo);
+setInterval(() => {
+    latencyInfo.innerText = `Latency: ${Math.round(audioCtx.outputLatency * 1000)}ms`;
+}, 100);
 
 function updateIndicators() {
     for (let pageIndicatorIndex = 0; pageIndicatorIndex < numPages; pageIndicatorIndex++) {
