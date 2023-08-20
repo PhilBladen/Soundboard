@@ -3,25 +3,32 @@ const path = require('path');
 
 let selectedPage = 0;
 const keysDown = {};
-let renderPageOffsetX = 0;
 const audioCtx = new AudioContext();
 const keyboard = [['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
 ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
 ['z', 'x', 'c', 'v', 'b', 'n', 'm']];
+const audioSlots = [];
+const keyboardToSampleMap = [];
 
+//////////// CONFIG ////////////
 const mainColor = "#fcd140";
 const secondaryColor = "#2b2618";
+const margin = 10;
+const numPages = 3;
 
 class AudioSample {
     constructor(name, buffer) {
         this.name = name;
         this.buffer = buffer;
     }
-    play() {
+
+    play(endedCallback) {
         const source = audioCtx.createBufferSource();
         source.buffer = this.buffer;
         source.connect(audioCtx.destination);
         source.start(0);
+        if (endedCallback)
+            source.addEventListener("ended", endedCallback);
     }
 }
 
@@ -29,14 +36,15 @@ class AudioSlot {
     constructor(controlKey, parent, pageID) {
         this.pageID = pageID;
         this.controlKey = controlKey;
+        this.numPlaying = 0;
 
         const div = document.createElement("div");
+        this.div = div;
         div.style = "display: flex; flex-direction: column; justify-content: center; align-items: center;"
-        div.style.minWidth = div.style.maxWidth = `${buttonSize - 10}px`;
-        div.style.minHeight = div.style.maxHeight = `${buttonSize - 10}px`;
+        this.resize(buttonSize);
         div.style.borderRadius = "10px";
         div.style.fontFamily = "HP";
-        div.style.fontSize = "25px";
+        div.style.fontSize = "1.2vw";
         div.style.textAlign = "center";
         div.style.verticalAlign = "middle";
         div.style.cursor = "pointer";
@@ -61,31 +69,51 @@ class AudioSlot {
         // this.nameDiv.innerText = controlKey.toLocaleUpperCase();
         div.appendChild(this.nameDiv);
 
-        this.div = div;
 
-        // Detect control modifier key press:
-        window.addEventListener("keydown", (e) => {
-            if (e.ctrlKey) {
-                cross.style.display = "";
-            }
-            // else {
-            // cross.style.display = "none";
-            // }
-        });
-        window.addEventListener("keyup", (e) => {
-            if (!e.ctrlKey) {
-                cross.style.display = "none";
-            }
-        });
+        // window.addEventListener("keydown", (e) => {
+        //     if (e.ctrlKey) {
+        //         cross.style.display = "";
+        //     }
+        //     // else {
+        //     // cross.style.display = "none";
+        //     // }
+        // });
+        // window.addEventListener("keyup", (e) => {
+        //     if (!e.ctrlKey) {
+        //         cross.style.display = "none";
+        //     }
+        // });
 
 
         // div.innerText = as.name;
         const labelDiv = document.createElement("div");
-        labelDiv.style = "display: flex; flex-direction: column; justify-content: center; align-items: center; margin-bottom: 0px;";
+        labelDiv.style = `display: flex; flex-direction: column; justify-content: center; align-items: center; margin-bottom: 0px; background-color: ${secondaryColor}; color: ${mainColor}; width: 100%`;
         labelDiv.innerText = controlKey.toLocaleUpperCase();
         div.appendChild(labelDiv);
 
         parent.appendChild(div);
+
+        audioSlots.push(this);
+    }
+
+    resize(buttonSize) {
+        this.div.style.minWidth = this.div.style.maxWidth = `${buttonSize - 10}px`;
+        this.div.style.minHeight = this.div.style.maxHeight = `${buttonSize - 10}px`;
+    }
+
+    onSamplePlayEnd() {
+        this.numPlaying--;
+        if (this.numPlaying == 0) {
+            this.div.style.backgroundColor = mainColor;
+            this.div.style.color = secondaryColor;
+        }
+    }
+
+    play() {
+        this.sample.play(() => this.onSamplePlayEnd());
+        this.div.style.backgroundColor = secondaryColor;
+        this.div.style.color = mainColor;
+        this.numPlaying++;
     }
 
     loadFile(absoluteFilePath) {
@@ -95,18 +123,17 @@ class AudioSlot {
             const fileName = path.basename(absoluteFilePath);
             const sampleName = fileName.substring(0, fileName.lastIndexOf("."));
             audioCtx.decodeAudioData(toArrayBuffer(data), (buffer) => {
-                const as = new AudioSample(sampleName, buffer);
+                this.sample = new AudioSample(sampleName, buffer);
                 // this.div.style.backgroundColor = secondaryColor;
                 this.div.style.outlineStyle = "solid";
                 this.nameDiv.innerText = sampleName;
-                keyboardToSampleMap[this.pageID][this.controlKey] = as;
+                keyboardToSampleMap[this.pageID][this.controlKey] = this;
             });
         });
     }
 }
 
-let audioSamples = [];
-const keyboardToSampleMap = [{}, {}, {}];
+
 
 function toArrayBuffer(buffer) {
     const ab = new ArrayBuffer(buffer.length);
@@ -128,15 +155,16 @@ for (const file of files) {
 
 document.body.style.backgroundColor = mainColor;
 
-const margin = 10;
+
 const buttonSize = ((window.innerWidth - margin) / keyboard[0].length) - margin;
 let i = 0;
 const app = document.createElement("div");
 app.id = "app";
 app.style = "display: flex; flex-direction: row; justify-content: center; align-items: center; width:100%; height:100%;";
-for (let pageIndex = 0; pageIndex < 3; pageIndex++) {
+for (let pageIndex = 0; pageIndex < numPages; pageIndex++) {
     const page = document.createElement("div");
-    page.style = "display: flex; flex-direction: column; justify-content: center; align-items: center; width:100%; height:100%; position: absolute; transition: transform 0.15s ease-in-out;";
+    page.style = `display: flex; flex-direction: column; justify-content: center; align-items: center; width:100%; height:100%; position: absolute; transform: translateX(${(pageIndex - selectedPage) * window.innerWidth}px); transition: transform 0.15s ease-in-out;`;
+    keyboardToSampleMap.push({});
     for (const lineIndex in keyboard) {
         const row = document.createElement("div");
         row.style = "display: flex; flex-direction: row; justify-content: center; align-items: center;";
@@ -158,7 +186,7 @@ for (let pageIndex = 0; pageIndex < 3; pageIndex++) {
 }
 document.body.appendChild(app);
 
-for (let pageIndicatorIndex = 0; pageIndicatorIndex < 3; pageIndicatorIndex++) {
+for (let pageIndicatorIndex = 0; pageIndicatorIndex < numPages; pageIndicatorIndex++) {
     const pageIndicator = document.createElement("div");
     pageIndicator.style = `height: 30px; width: 30px; margin: 10px; border-radius: 999px; outline: 5px solid #2b2618; outline-offset: -5px; margin-bottom: 30px; ${pageIndicatorIndex == 0 ? `background-color: ${secondaryColor}` : mainColor}`;
     pageIndicator.style.transition = "background-color 0.15s ease-in-out ";
@@ -166,78 +194,11 @@ for (let pageIndicatorIndex = 0; pageIndicatorIndex < 3; pageIndicatorIndex++) {
 }
 
 function updateIndicators() {
-    for (let pageIndicatorIndex = 0; pageIndicatorIndex < 3; pageIndicatorIndex++) {
+    for (let pageIndicatorIndex = 0; pageIndicatorIndex < numPages; pageIndicatorIndex++) {
         const pageIndicator = document.getElementById("pageIndicators").children[pageIndicatorIndex];
         pageIndicator.style.backgroundColor = selectedPage == pageIndicatorIndex ? secondaryColor : mainColor;
     }
 }
-
-// function render() {
-//     let ctx = canvas.getContext("2d");
-//     ctx.resetTransform();
-//     ctx.fillStyle = "#fcd140";
-//     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-//     renderPageOffsetX += (selectedPage * window.innerWidth - renderPageOffsetX) * 0.08;
-
-//     const margin = 10;
-//     const buttonSize = ((window.innerWidth - margin) / keyboard[0].length) - margin;
-//     ctx.translate(-renderPageOffsetX, 0);
-//     let i = 0;
-//     for (let pageIndex = 0; pageIndex < 3; pageIndex++) {
-//         for (const lineIndex in keyboard) {
-//             const line = keyboard[lineIndex];
-//             const lineOffset = (window.innerWidth - (line.length * buttonSize + (line.length - 1) * margin)) / 2;
-//             for (const keyIndex in line) {
-//                 let as = audioSamples[i++];
-//                 if (!as) continue;
-//                 keyboardToSampleMap[pageIndex][line[keyIndex]] = as;
-
-//                 const fileName = as.name;
-//                 const wrappedFileName = fileName.replace(/(.{13})/g, "$1\n");
-//                 const key = line[keyIndex];
-//                 const buttonStartX = lineOffset + keyIndex * (buttonSize + margin);
-//                 const buttonStartY = lineIndex * (buttonSize + margin) + 230;
-//                 ctx.fillStyle = keysDown[key] ? "#aa9e6b" : "#2b2618";
-//                 ctx.beginPath();
-//                 ctx.roundRect(buttonStartX, buttonStartY, buttonSize, buttonSize, 10);
-//                 ctx.fill();
-
-//                 ctx.fillStyle = "#fcd140";
-//                 ctx.font = "30px HP";
-//                 const textWidth = ctx.measureText(key).width;
-//                 ctx.fillText(key.toLocaleUpperCase(), buttonStartX + buttonSize * 0.5 - textWidth * 0.5, buttonStartY + buttonSize - 10);
-//                 ctx.font = "25px HP";
-//                 for (let j = 0; j < wrappedFileName.split("\n").length; j++) {
-//                     const line = wrappedFileName.split("\n")[j];
-//                     ctx.fillText(line, buttonStartX + margin, buttonStartY + 25 + j * 25);
-//                 }
-//             }
-//         }
-//         ctx.translate(window.innerWidth, 0);
-//     }
-//     ctx.resetTransform();
-
-//     // Draw three small dots below the rectangles:
-//     ctx.translate(canvas.width * 0.5, canvas.height - 50);
-//     for (let i = -1; i <= 1; i++) {
-//         ctx.fillStyle = "#2b2618";
-//         ctx.beginPath();
-//         ctx.arc(i * 50, 0, 13, 0, 2 * Math.PI);
-//         ctx.fill();
-//         ctx.fillStyle = selectedPage == (i + 1) ? "#2b2618" : "#fcd140";
-//         ctx.beginPath();
-//         ctx.arc(i * 50, 0, 10, 0, 2 * Math.PI);
-//         ctx.fill();
-//     }
-// }
-
-// const animFrame = () => window.requestAnimationFrame(() => {
-//     render();
-//     animFrame();
-// });
-// animFrame();
-// render();
 
 window.addEventListener("keydown", (e) => {
     keysDown[e.key.toLocaleLowerCase()] = true;
@@ -247,31 +208,31 @@ window.addEventListener("keydown", (e) => {
     }
     else if (e.key == "ArrowRight") {
         selectedPage++;
-        if (selectedPage > 2) selectedPage = 2;
+        if (selectedPage > (numPages - 1)) selectedPage = numPages - 1;
     }
     else {
         keyboardToSampleMap[selectedPage][e.key.toLocaleLowerCase()]?.play();
 
     }
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < numPages; i++) {
         document.getElementById("app").children[i].style.transform = `translateX(${(i - selectedPage) * window.innerWidth}px)`;
     }
-    // document.getElementById("app").children style.translateX = selectedPage * window.innerWidth;
     updateIndicators();
 });
 window.addEventListener("keyup", (e) => {
     keysDown[e.key.toLocaleLowerCase()] = false;
 });
 
-// canvas.width = window.innerWidth;
-// canvas.height = window.innerHeight;
-
-// window.addEventListener("resize", () => {
-//     canvas.width = window.innerWidth;
-//     canvas.height = window.innerHeight;
-//     render();
-// });
+window.addEventListener("resize", () => {
+    const buttonSize = ((window.innerWidth - margin) / keyboard[0].length) - margin;
+    for (const as of audioSlots) {
+        as.resize(buttonSize);
+    }
+    for (let i = 0; i < numPages; i++) {
+        document.getElementById("app").children[i].style.transform = `translateX(${(i - selectedPage) * window.innerWidth}px)`;
+    }
+});
 
 document.addEventListener('drop', (e) => {
     e.preventDefault();
