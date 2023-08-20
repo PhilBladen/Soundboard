@@ -1,18 +1,53 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'">
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self' 'unsafe-inline'"
+    />
     <title>HP Sound Board v2</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="./favicon.svg" type="image/svg">
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" href="./favicon.svg" type="image/svg" />
   </head>
   <body style="width: 100%; height: 100%">
-    <div style="font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif; position: absolute; font-size: 75px; padding-top: 0.5em; display: flex; justify-content: center; width: 100%;">
-        <div style="font-family: HP; color: #2b2618;">
-            HP Sound Board v2
-        </div></div>
-    <!-- <canvas id="canvas" style="width: 100%; height: 100vh; margin: 0; padding: 0;"> -->
+    <svg
+      id="cross"
+      style="display: none"
+      xmlns="http://www.w3.org/2000/svg"
+      height="1em"
+      viewBox="0 0 512 512"
+    >
+      <path
+        style="fill: white"
+        d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"
+      />
+    </svg>
+    <div
+      style="
+        font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+        position: absolute;
+        font-size: 75px;
+        padding-top: 0.5em;
+        display: flex;
+        justify-content: center;
+        width: 100%;
+      "
+    >
+      <div style="font-family: HP; color: #2b2618">HP Sound Board 2K23</div>
+    </div>
+    <div
+      style="
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        /* padding: 20px; */
+        justify-content: center;
+      "
+      id="pageIndicators"
+    ></div>
     <script src="./index.js"></script>
   </body>
 </html>
