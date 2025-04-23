@@ -65,10 +65,7 @@ class AudioSlot {
         div.style.verticalAlign = "middle";
         div.style.cursor = "pointer";
         div.style.overflow = "hidden";
-        // div.style.backgroundColor = "#2b2618";
-
-        // div.style.border = "none";
-        // div.style.flexGrow = 1;
+        div.style.color = secondaryColor;
         div.style.margin = "5px";
         div.style.padding = "5px";
         div.style.outline = "5px dashed #2b2618";
@@ -211,7 +208,7 @@ for (let pageIndicatorIndex = 0; pageIndicatorIndex < numPages; pageIndicatorInd
 }
 
 const latencyInfo = document.createElement("div");
-latencyInfo.style = "position: absolute; bottom: 0px; right: 0px; padding: 10px; font-family: HP; font-size: 1.2vw; color: #2b2618;";
+latencyInfo.style = `position: absolute; bottom: 0px; right: 0px; padding: 10px; font-family: HP; font-size: 1.2vw; color: ${secondaryColor};`;
 latencyInfo.innerText = "Latency: 0ms";
 document.getElementById("pageIndicators").appendChild(latencyInfo);
 setInterval(() => {
